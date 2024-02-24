@@ -2,8 +2,8 @@ name: create-github-release
 on:
   workflow_call:
     secrets:
-      SVC_CLI_BOT_GITHUB_TOKEN:
-        description: A Github PAT with repo write access.
+      PERSONAL_ACCESS_TOKEN:
+        description: a github PAT with repo access
         required: true
 
     inputs:
@@ -25,15 +25,15 @@ jobs:
     steps:
       - name: Get Github user info
         id: github-user-info
-        uses: salesforcecli/github-workflows/.github/actions/getGithubUserInfo@main
+        uses: SimplySF/github-workflows/.github/actions/getGithubUserInfo@main
         with:
-          SVC_CLI_BOT_GITHUB_TOKEN: ${{ secrets.SVC_CLI_BOT_GITHUB_TOKEN }}
+          PERSONAL_ACCESS_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
 
       - uses: actions/checkout@v4
         with:
-          token: ${{ secrets.SVC_CLI_BOT_GITHUB_TOKEN }}
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
 
-      - uses: salesforcecli/github-workflows/.github/actions/getPreReleaseTag@main
+      - uses: SimplySF/github-workflows/.github/actions/getPreReleaseTag@main
         id: distTag
 
       - name: Validate prerelease
@@ -62,7 +62,7 @@ jobs:
 
       - name: Generate oclif readme
         if: ${{ inputs.generate-readme }}
-        uses: salesforcecli/github-workflows/.github/actions/generateOclifReadme@main
+        uses: SimplySF/github-workflows/.github/actions/generateOclifReadme@main
         with:
           skip-on-empty: ${{ inputs.skip-on-empty }}
           pre-release: ${{ steps.prereleaseTag.outputs.tag && 'true' || 'false' }}
@@ -74,7 +74,7 @@ jobs:
         with:
           git-user-name: ${{ steps.github-user-info.outputs.username }}
           git-user-email: ${{ steps.github-user-info.outputs.email }}
-          github-token: ${{ secrets.SVC_CLI_BOT_GITHUB_TOKEN }}
+          github-token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
           tag-prefix: ""
           # Setting 'release-count' to 0 will keep ALL releases in the change log file (no pruning)
           release-count: "0"
@@ -93,5 +93,5 @@ jobs:
           commit: ${{ github.ref_name }}
           body: ${{ steps.changelog.outputs.clean_changelog }}
           prerelease: ${{ steps.prereleaseTag.outputs.tag && 'true' || 'false' }}
-          token: ${{ secrets.SVC_CLI_BOT_GITHUB_TOKEN }}
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
           skipIfReleaseExists: true

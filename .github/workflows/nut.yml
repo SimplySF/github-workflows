@@ -1,15 +1,6 @@
 on:
   workflow_call:
     secrets:
-      SF_CHANGE_CASE_SFDX_AUTH_URL:
-        description: "SFDX_AUTH_URL for the CTC org. Only useful for the CTC NUTs."
-        required: false
-      SF_CHANGE_CASE_TEMPLATE_ID:
-        required: false
-        description: "Template ID for the CTC org. Only useful for the CTC NUTs."
-      SF_CHANGE_CASE_CONFIGURATION_ITEM:
-        required: false
-        description: "Configuration Item for the CTC org. Only useful for the CTC NUTs."
       ONEGP_TESTKIT_AUTH_URL:
         description: "SFDX_AUTH_URL for the 1GP org. Only useful for the 1GP NUTs in packaging"
         required: false
@@ -77,11 +68,11 @@ jobs:
           path: "**/node_modules"
           key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/yarn.lock') }}
       - name: add CLI as global dependency
-        uses: salesforcecli/github-workflows/.github/actions/retry@main
+        uses: SimplySF/github-workflows/.github/actions/retry@main
         with:
           max_attempts: ${{ inputs.retries }}
           command: npm install @salesforce/cli@nightly -g
-      - uses: salesforcecli/github-workflows/.github/actions/yarnInstallWithRetries@main
+      - uses: SimplySF/github-workflows/.github/actions/yarnInstallWithRetries@main
         if: ${{ steps.cache-nodemodules.outputs.cache-hit != 'true' }}
       - run: yarn compile
       - name: Check that oclif config exists
@@ -92,7 +83,7 @@ jobs:
       - run: echo "TESTKIT_EXECUTABLE_PATH=${{inputs.sfdxExecutablePath}}" >> $GITHUB_ENV
         if: inputs.sfdxExecutablePath
       - name: NUTs with ${{ inputs.retries }} attempts
-        uses: salesforcecli/github-workflows/.github/actions/retry@main
+        uses: SimplySF/github-workflows/.github/actions/retry@main
         with:
           max_attempts: ${{ inputs.retries }}
           command: ${{ inputs.command }}
@@ -104,9 +95,6 @@ jobs:
           TESTKIT_JWT_KEY: ${{ secrets.TESTKIT_JWT_KEY }}
           TESTKIT_HUB_INSTANCE: ${{ secrets.TESTKIT_HUB_INSTANCE }}
           ONEGP_TESTKIT_AUTH_URL: ${{ secrets.ONEGP_TESTKIT_AUTH_URL }}
-          SF_CHANGE_CASE_SFDX_AUTH_URL: ${{ secrets.SF_CHANGE_CASE_SFDX_AUTH_URL }}
-          SF_CHANGE_CASE_TEMPLATE_ID: ${{ secrets.SF_CHANGE_CASE_TEMPLATE_ID}}
-          SF_CHANGE_CASE_CONFIGURATION_ITEM: ${{ secrets.SF_CHANGE_CASE_CONFIGURATION_ITEM}}
           TESTKIT_SETUP_RETRIES: 2
           SF_DISABLE_TELEMETRY: true
           DEBUG: ${{ vars.DEBUG }}

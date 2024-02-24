@@ -1,8 +1,8 @@
 on:
   workflow_call:
     secrets:
-      SVC_CLI_BOT_GITHUB_TOKEN:
-        description: A Github PAT with repo write access.
+      PERSONAL_ACCESS_TOKEN:
+        description: A Github PAT with repo access
         required: true
 
 jobs:
@@ -10,22 +10,22 @@ jobs:
     # todo: parameterize this as input if anyone ever needs ip-restricted runner
     runs-on: "ubuntu-latest"
     env:
-      GITHUB_TOKEN: ${{ secrets.SVC_CLI_BOT_GITHUB_TOKEN }}
+      GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
     steps:
       - uses: actions/checkout@v4
         with:
-          token: ${{ secrets.SVC_CLI_BOT_GITHUB_TOKEN }}
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
       - uses: actions/setup-node@v4
         with:
           node-version: lts/*
           cache: yarn
-      - uses: salesforcecli/github-workflows/.github/actions/yarnInstallWithRetries@main
+      - uses: SimplySF/github-workflows/.github/actions/yarnInstallWithRetries@main
       - name: Get Github user info
         id: github-user-info
-        uses: salesforcecli/github-workflows/.github/actions/getGithubUserInfo@main
+        uses: SimplySF/github-workflows/.github/actions/getGithubUserInfo@main
         with:
-          SVC_CLI_BOT_GITHUB_TOKEN: ${{ secrets.SVC_CLI_BOT_GITHUB_TOKEN }}
-      - uses: salesforcecli/github-workflows/.github/actions/gitConfig@main
+          PERSONAL_ACCESS_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+      - uses: SimplySF/github-workflows/.github/actions/gitConfig@main
         with:
           username: ${{ steps.github-user-info.outputs.username }}
           email: ${{ steps.github-user-info.outputs.email }}

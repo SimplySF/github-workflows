@@ -3,43 +3,12 @@ on:
     secrets:
       NPM_TOKEN:
         description: npm token
-      AWS_ACCESS_KEY_ID:
-        description: AWS access key id. Only required if sign = true
-      AWS_SECRET_ACCESS_KEY:
-        description: AWS secret access key. Only required if sign = true
 
     inputs:
-      tag:
-        required: false
-        description: tag used to publish to npm
-        default: latest
-        type: string
-      sign:
-        required: false
-        description: signs the package using sf-release if set to true
-        default: false
-        type: boolean
-      dryrun:
-        required: false
-        description: if true, the job will run but will not publish to npm or push to git
-        default: false
-        type: boolean
-      prerelease:
-        required: false
-        description: if true, it will use the version <version>-<branch>.0
-        type: boolean
-        default: false
       nodeVersion:
         description: version of node to use.  It's better to specify latest, lts/* or lts/-1 than to hardode numbers
         type: string
         default: lts/*
-        required: false
-      ctc:
-        description: |
-          Use CTC.  Requires environment to contain
-          SF_CHANGE_CASE_SFDX_AUTH_URL, SF_CHANGE_CASE_TEMPLATE_ID, SF_CHANGE_CASE_CONFIGURATION_ITEM.
-          Also requires a static ip runner (you can't use ubuntu-latest)
-        type: boolean
         required: false
       runsOn:
         description: the runner.  Only needed if you need a non-public runner (ex, for git checkout from IP restricted private repo)
@@ -76,14 +45,8 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
       - run: echo "published said ${{ steps.is-published.outputs.published }}"
 
-  ctc-open:
-    needs: [check-publish]
-    if: inputs.ctc && needs.check-publish.outputs.published == 'false'
-    uses: salesforcecli/github-workflows/.github/workflows/ctcOpen.yml@main
-    secrets: inherit
-
   npm-publish:
-    needs: [check-publish, ctc-open]
+    needs: [check-publish]
     if: ${{ always() && needs.check-publish.outputs.published == 'false' }}
     runs-on: ${{ inputs.runsOn }}
     steps:
@@ -92,39 +55,12 @@ jobs:
           ref: ${{ inputs.githubTag }}
       - uses: actions/setup-node@v4
         with:
-          node-version: ${{ inputs.nodeVersion }}
+          always-auth: true
           cache: yarn
-      - uses: salesforcecli/github-workflows/.github/actions/yarnInstallWithRetries@main
+          node-version: ${{ inputs.nodeVersion }}
+      - uses: SimplySF/github-workflows/.github/actions/yarnInstallWithRetries@main
       - run: yarn build
-      - run: npm install -g @salesforce/plugin-release-management
-
-      - name: NPM Release
-        run: |
-          sf-release npm:package:release \
-            --githubtag ${{ inputs.githubTag}} \
-            --npmtag ${{ inputs.tag }} \
-            --no-install \
-            ${{ inputs.dryrun && '--dryrun' || '' }} \
-            ${{ inputs.prerelease && format('--prerelease {0}', github.ref_name) || '' }} \
-            ${{ inputs.sign && '--sign' || '' }}
+      - run: yarn publish
         env:
-          NPM_TOKEN: ${{secrets.NPM_TOKEN}}
-          AWS_ACCESS_KEY_ID: ${{secrets.AWS_ACCESS_KEY_ID}}
-          AWS_SECRET_ACCESS_KEY: ${{secrets.AWS_SECRET_ACCESS_KEY}}
-
-  ctcCloseSuccess:
-    needs: [ctc-open, npm-publish]
-    if: needs.ctc-open.result == 'success' && needs.npm-publish.result == 'success' && needs.ctc-open.outputs.changeCaseId
-    uses: salesforcecli/github-workflows/.github/workflows/ctcClose.yml@main
-    secrets: inherit
-    with:
-      changeCaseId: ${{needs.ctc-open.outputs.changeCaseId}}
-
-  ctcCloseFail:
-    needs: [ctc-open, npm-publish]
-    if: always() && inputs.ctc && needs.ctc-open.outputs.changeCaseId && (needs.ctc-open.result != 'success' || needs.npm-publish.result != 'success')
-    uses: salesforcecli/github-workflows/.github/workflows/ctcClose.yml@main
-    secrets: inherit
-    with:
-      changeCaseId: ${{ needs.ctc-open.outputs.changeCaseId }}
-      status: Not Implemented
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
