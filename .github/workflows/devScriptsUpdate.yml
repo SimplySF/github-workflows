@@ -14,6 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
       - uses: SimplySF/github-workflows/.github/actions/versionInfo@main
         id: version-info
@@ -27,15 +28,13 @@ jobs:
           path: "package.json"
           prop_path: 'devDependencies["@simplysf/dev-scripts"]'
 
-      - run: echo "this repo has version is ${{ steps.packageVersion.outputs.prop }}"
-      - run: echo "output value will be ${{ !endsWith(steps.packageVersion.outputs.prop, steps.version-info.outputs.version) }}"
+      - run: echo "[INFO] shouldUpdate value will be:\ ${{ !endsWith(steps.packageVersion.outputs.prop, steps.version-info.outputs.version) }}"
 
   updateDevScripts:
     needs: [compareVersions]
     if: ${{ needs.compareVersions.outputs.shouldUpdate == 'true' }}
     runs-on: "ubuntu-latest"
     steps:
-      - run: echo "previous job output was ${{ needs.compareVersions.outputs.shouldUpdate }}"
       - uses: actions/checkout@v4
         with:
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
@@ -55,12 +54,12 @@ jobs:
         with:
           node-version: lts/*
           cache: yarn
+      # TODO: Do we need this? Isn't that why we use npx?
       - run: npm install -g yarn-deduplicate
       - run: yarn upgrade sf-chipps-dev-scripts@latest
       # this may fail because that's how dev-scripts does things
       - run: yarn install  --network-timeout 600000
         continue-on-error: true
-
       - run: yarn install  --network-timeout 600000
       - run: npx yarn-deduplicate
       - run: yarn install  --network-timeout 600000

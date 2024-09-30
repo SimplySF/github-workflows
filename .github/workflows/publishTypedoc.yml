@@ -7,7 +7,6 @@ on:
 
 jobs:
   publish:
-    # todo: parameterize this as input if anyone ever needs ip-restricted runner
     runs-on: "ubuntu-latest"
     env:
       GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
@@ -29,14 +28,16 @@ jobs:
         with:
           username: ${{ steps.github-user-info.outputs.username }}
           email: ${{ steps.github-user-info.outputs.email }}
-      - name: build docs
+
+      - name: Build docs
         run: |
           rm -rf docs
           git worktree prune
           git fetch origin gh-pages:gh-pages
           git worktree add docs gh-pages
           yarn docs
-      - name: send to git
+
+      - name: Send to git
         run: |
           cd docs
           git add .
