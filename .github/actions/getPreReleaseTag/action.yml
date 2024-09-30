@@ -13,7 +13,7 @@ runs:
   using: composite
   steps:
     - uses: SimplySF/github-workflows/.github/actions/get-json-property@main
-      id: packageVersion
+      id: package-version
       with:
         path: "package.json"
         prop_path: "version"
