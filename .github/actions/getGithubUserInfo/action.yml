@@ -44,5 +44,3 @@ runs:
         fi
 
         echo "email=$EMAIL" >> "$GITHUB_OUTPUT"
-      env:
-        GH_TOKEN: ${{ inputs.PERSONAL_ACCESS_TOKEN }}
