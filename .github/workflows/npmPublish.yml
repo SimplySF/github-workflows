@@ -40,6 +40,10 @@ on:
         type: string
         default: .
 
+permissions:
+  id-token: write
+  contents: read
+
 jobs:
   check-publish:
     outputs:
@@ -241,8 +245,5 @@ jobs:
             fi
           done
       - run: $INPUTS_PACKAGE_MANAGER run build
-      - run: $INPUTS_PACKAGE_MANAGER publish ${{ inputs.tag && format('--tag {0}', inputs.tag) || '' }}
+      - run: npm publish ${{ inputs.tag && format('--tag {0}', inputs.tag) || '' }}
         working-directory: ${{ inputs.packagePath }}
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-          NPM_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
