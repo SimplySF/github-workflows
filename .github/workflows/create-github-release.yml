@@ -29,6 +29,9 @@ jobs:
   release:
     runs-on: ubuntu-latest
     steps:
+      - name: Setup Node
+        uses: actions/setup-node@v6
+
       - name: Get Github user info
         id: github-user-info
         uses: SimplySF/github-workflows/.github/actions/getGithubUserInfo@main
